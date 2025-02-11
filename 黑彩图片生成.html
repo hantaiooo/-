@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>黑彩图片生成器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .image-uploader {
+            max-width: 800px;
+            margin: 0 20px;
+            padding: 20px;
+            margin-right: 340px;
+        }
+
+        .upload-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .upload-box {
+            flex: 1;
+            margin: 0 10px;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .image-controls {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .control-group {
+            margin: 10px 0;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .control-value {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+        }
+
+        .fusion-button, .save-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .fusion-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: calc(100% - 820px);
+            min-width: 400px;
+            background: var(--background-color);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fused-image {
+            width: 100%;
+            height: 400px;
+            margin: 10px auto;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: background-image 0.3s ease;
+        }
+
+        .error-message {
+            color: #ff4444;
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --background-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+            --hover-color: #45a049;
+            --panel-background: #f5f5f5;
+        }
+        
+        [data-theme="dark"] {
+            --primary-color: #66bb6a;
+            --background-color: #1a1a1a;
+            --text-color: #ffffff;
+            --border-color: #444444;
+            --hover-color: #81c784;
+            --panel-background: #2d2d2d;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .advanced-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--panel-background);
+        }
+        
+        .theme-switch {
+            position: fixed;
+            top: 380px;
+            right: 20px;
+        }
+        
+        #themeToggle {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .parameter-tip {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .help-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .parameter-help {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+
+        .parameter-help ul {
+            padding-left: 20px;
+            margin: 5px 0;
+        }
+
+        .parameter-help li {
+            margin: 5px 0;
+        }
+
+        .rgb-controls {
+            display: none;
+        }
+
+        .background-toggle {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .background-toggle button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .background-toggle button i {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switch">
+        <button id="themeToggle">切换主题</button>
+    </div>
+
+    <div class="image-uploader">
+        <header>
+            <h1>黑彩图片生成器</h1>
+            <p>上传两张图片，生成黑白底不同效果的图片</p>
+        </header>
+
+        <div id="error" class="error-message" style="display: none;"></div>
+
+        <div class="advanced-panel">
+            <h4>参数调整 
+                <button id="resetParams" class="reset-button">重置参数</button>
+                <span class="help-icon" title="点击查看参数说明">?</span>
+            </h4>
+            <div class="parameter-help" style="display: none;">
+                <p>参数说明：</p>
+                <p><strong>黑色背景颜色保留比例</strong>：控制在黑色背景下可见图片的颜色保留程度。值越高，原始颜色保留越多；值越低，灰度效果越强。</p>
+            </div>
+            <div class="parameter-group">
+                <div class="control-group">
+                    <label>黑色背景颜色保留比例</label>
+                    <input type="range" id="colorBlack" min="0" max="100" value="70" step="1" />
+                    <span class="control-value">0.7</span>
+                    <div class="parameter-tip">调节黑底图片的颜色保留程度</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-box">
+                <h3>白底显示图片</h3>
+                <input type="file" accept="image/*" id="firstImage" />
+                <div id="firstPreview"></div>
+            </div>
+            
+            <div class="upload-box">
+                <h3>黑底显示图片</h3>
+                <input type="file" accept="image/*" id="secondImage" />
+                <div id="secondPreview"></div>
+            </div>
+        </div>
+
+        <button id="previewButton" class="fusion-button" disabled>生成图片</button>
+
+        <div id="resultSection" class="result-section" style="display: none;">
+            <h3>预览效果（点击图片自动保存）</h3>
+            <div class="preview-container">
+                <div id="fusedImage" class="fused-image" onclick="handleSaveImage()"></div>
+                <div class="background-toggle">
+                    <button id="lightToggle">
+                        <i class="fas fa-lightbulb"></i>
+                        开灯
+                    </button>
+                    <button id="darkToggle">
+                        <i class="fas fa-moon"></i>
+                        关灯
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">处理中...</div>
+        </div>
+    </div>
+
+    <script>
+        let firstImageData = null;
+        let secondImageData = null;
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+            setTimeout(() => {
+                error.style.display = 'none';
+            }, 3000);
+        }
+
+        function validateImage(file) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                showError('请上传 JPG、PNG 或 GIF 格式的图片');
+                return false;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showError('图片大小不能超过 5MB');
+                return false;
+            }
+
+            return true;
+        }
+
+        function handleImageUpload(file, previewId, saveData) {
+            if (!validateImage(file)) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview';
+                
+                const previewDiv = document.getElementById(previewId);
+                previewDiv.innerHTML = '';
+                previewDiv.appendChild(img);
+                
+                saveData(e.target.result);
+                
+                checkFusionButton();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function checkFusionButton() {
+            const fusionButton = document.getElementById('previewButton');
+            fusionButton.disabled = !(firstImageData && secondImageData);
+        }
+
+        document.getElementById('firstImage').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                handleImageUpload(e.target.files[0], 'firstPreview', data => {
+                    firstImageData = data;
+                });
+            }
+        });
+
+        document.getElementById('secondImage').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                handleImageUpload(e.target.files[0], 'secondPreview', data => {
+                    secondImageData = data;
+                });
+            }
+        });
+
+        // 添加 createImageData 函数的定义
+        function createImageData(imgSrc) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 绘制并保持宽高比
+                    const scale = Math.min(300 / img.width, 300 / img.height);
+                    const x = (300 - img.width * scale) / 2;
+                    const y = (300 - img.height * scale) / 2;
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 300, 300);
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    
+                    resolve(ctx.getImageData(0, 0, 300, 300));
+                };
+                img.onerror = reject;
+                img.src = imgSrc;
+            });
+        }
+
+        // 修改 processPhantomTank 函数中的错误处理
+        async function processPhantomTank(outImg, inImg) {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 300;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
+
+                // 获取图片数据
+                let outImageData, inImageData;
+                try {
+                    [outImageData, inImageData] = await Promise.all([
+                        createImageData(outImg),
+                        createImageData(inImg)
+                    ]);
+                } catch (error) {
+                    throw new Error('图片加载失败，请重试');
+                }
+
+                // 获取用户设置的参数
+                const m_colorBlack = document.getElementById('colorBlack').value / 100;
+
+                // 创建结果图像
+                const result = ctx.createImageData(300, 300);
+                const resultData = result.data;
+                const outData = outImageData.data;
+                const inData = inImageData.data;
+
+                // 处理每个像素
+                for (let i = 0; i < outData.length; i += 4) {
+                    // 获取第一张图片的RGB值（0-1范围）
+                    let r1 = outData[i] / 255;
+                    let g1 = outData[i + 1] / 255;
+                    let b1 = outData[i + 2] / 255;
+
+                    // 获取第二张图片的RGB值（0-1范围）
+                    let r2 = inData[i] / 255;
+                    let g2 = inData[i + 1] / 255;
+                    let b2 = inData[i + 2] / 255;
+
+                    // 将第一张图片转换为灰度
+                    const gray1 = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
+                    r1 = g1 = b1 = gray1;
+
+                    // 处理第二张图片（保留颜色）
+                    r2 *= m_colorBlack;
+                    g2 *= m_colorBlack;
+                    b2 *= m_colorBlack;
+
+                    // 计算Alpha通道
+                    const dr = 1 - r1 + r2;
+                    const dg = 1 - g1 + g2;
+                    const db = 1 - b1 + b2;
+                    
+                    const maxc = Math.max(Math.max(r2, g2), b2);
+                    const a = Math.min(Math.max(dr * 0.299 + dg * 0.587 + db * 0.114, maxc), 1);
+
+                    // 计算最终RGB值
+                    resultData[i] = Math.min(255, Math.max(0, (r2 / a) * 255));
+                    resultData[i + 1] = Math.min(255, Math.max(0, (g2 / a) * 255));
+                    resultData[i + 2] = Math.min(255, Math.max(0, (b2 / a) * 255));
+                    resultData[i + 3] = a * 255;
+                }
+
+                ctx.putImageData(result, 0, 0);
+                return canvas;
+            } catch (error) {
+                console.error('图片处理失败:', error);
+                throw error;
+            }
+        }
+
+        // 修改预览按钮的事件处理
+        document.getElementById('previewButton').addEventListener('click', async function() {
+            try {
+                if (!firstImageData || !secondImageData) {
+                    throw new Error('请先上传两张图片');
+                }
+                
+                showLoading(true);
+                const result = await processPhantomTank(firstImageData, secondImageData);
+                
+                if (!result) {
+                    throw new Error('图片处理失败');
+                }
+                
+                const resultUrl = result.toDataURL('image/png');
+                document.getElementById('fusedImage').style.backgroundImage = `url(${resultUrl})`;
+                document.getElementById('resultSection').style.display = 'block';
+            } catch (error) {
+                console.error('预览生成失败:', error);
+                showError(error.message || '预览生成失败，请重试');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // 背景切换功能
+        document.getElementById('lightToggle').addEventListener('click', function() {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.getElementById('fusedImage').style.backgroundColor = '#ffffff';
+            localStorage.setItem('theme', 'light');
+        });
+
+        document.getElementById('darkToggle').addEventListener('click', function() {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('fusedImage').style.backgroundColor = '#000000';
+            localStorage.setItem('theme', 'dark');
+        });
+
+        // 加载时设置预览图背景颜色
+        const initialTheme = localStorage.getItem('theme') || 'light';
+        document.getElementById('fusedImage').style.backgroundColor = 
+            initialTheme === 'light' ? '#ffffff' : '#000000';
+
+        // 修改保存按钮的事件处理
+        async function handleSaveImage() {
+            try {
+                if (!firstImageData || !secondImageData) {
+                    throw new Error('请先生成预览图片');
+                }
+                
+                showLoading(true);
+                const result = await processPhantomTank(firstImageData, secondImageData);
+                
+                if (!result) {
+                    throw new Error('图片处理失败');
+                }
+                
+                const link = document.createElement('a');
+                link.download = 'phantom_tank.png';
+                link.href = result.toDataURL('image/png', 1.0);
+                link.click();
+            } catch (error) {
+                console.error('保存失败:', error);
+                showError(error.message || '图片保存失败，请重试');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 添加错误处理和加载提示
+        function showLoading(show) {
+            const loading = document.getElementById('loading') || createLoadingElement();
+            loading.style.display = show ? 'flex' : 'none';
+        }
+
+        function createLoadingElement() {
+            const loading = document.createElement('div');
+            loading.id = 'loading';
+            loading.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="loading-text">处理中...</div>
+            `;
+            document.body.appendChild(loading);
+            return loading;
+        }
+
+        // 主题切换功能
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // 加载保存的主题
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        // 修改参数重置功能
+        document.getElementById('resetParams').addEventListener('click', function() {
+            document.getElementById('colorBlack').value = 70;
+            updateAllControlValues();
+        });
+
+        // 简化参数更新函数
+        function updateAllControlValues() {
+            const colorBlack = document.getElementById('colorBlack');
+            const span = colorBlack.nextElementSibling;
+            span.textContent = (colorBlack.value / 100).toFixed(2);
+        }
+
+        // 添加参数变化时的实时预览
+        document.querySelectorAll('.parameter-group input[type="range"]').forEach(input => {
+            input.addEventListener('input', function() {
+                updateAllControlValues();
+                // 如果已经有预览图片，则实时更新
+                if (document.getElementById('resultSection').style.display !== 'none') {
+                    document.getElementById('previewButton').click();
+                }
+            });
+        });
+
+        // 添加帮助说明的显示/隐藏功能
+        document.querySelector('.help-icon').addEventListener('click', function() {
+            const helpPanel = document.querySelector('.parameter-help');
+            helpPanel.style.display = helpPanel.style.display === 'none' ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html> 
